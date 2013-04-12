@@ -93,7 +93,9 @@ mainLoop board piece = do
 
 parseInput :: String -> Command
 parseInput "end" = Exit
-parseInput (r:s:c:[]) = if (C.isDigit) r && (C.isDigit c) && (' ' == s)
-                         then Move (C.digitToInt r, C.digitToInt c)
+parseInput (c:r:[]) = if (C.isDigit) r && (C.isAlpha c)
+                         then let col = (-96) + (C.ord (C.toLower c))
+                                  row = C.digitToInt r
+                              in Move (row, col)
                          else InvalidInput
 parseInput _ = InvalidInput
