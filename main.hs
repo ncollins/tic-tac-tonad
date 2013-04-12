@@ -6,7 +6,7 @@ import qualified Data.Char as C
 type Square = (Int, Int)
 data Piece = X | O | NoPiece deriving (Eq, Show)
 data Board = Board Int (M.Map Square Piece) -- the Int is the size
-data GameState = Tie | Victory | Continue deriving (Eq, Show)
+data State = Tie | Victory | Continue | Abort | Repeat deriving (Eq, Show)
 data Command = Exit | Move Square | InvalidInput deriving (Eq, Show)
 
 showBoard :: Board -> String
@@ -70,26 +70,33 @@ main = do
 mainLoop board piece = do
     putStrLn $ "enter your move " ++ (show piece) ++ ":"
     input <- fmap parseInput getLine
-    case input of
-        Exit -> return ()
-        InvalidInput -> do putStrLn "invalid input, try again..."
-                           mainLoop board piece
-        Move square -> do let maybeBoard = move board square piece
-                           in 
-                              case maybeBoard of
-                                  Nothing -> do putStrLn "invalid input, try again..."
-                                                mainLoop board piece
-                                  Just newBoard -> case gameState newBoard of
-                                      Victory -> do putStrLn $ (show piece) ++ " Wins!"
-                                                    putStr $ showBoard newBoard
-                                                    return ()
-                                      Tie     -> do putStrLn $ "Game over - no more moves left"
-                                                    putStr $ showBoard newBoard
-                                                    return ()
-                                      Continue -> let nextPiece = if piece == X then O else X
-                                                  in do putStr $ showBoard newBoard
-                                                        mainLoop newBoard nextPiece
+    putStrLn (show input)
+    let (state, newPiece, newBoard) = (evalInput input piece board)
+    case state of
+           Repeat -> do putStrLn "invalid input, try again..."
+                        mainLoop newBoard newPiece
+           Abort  -> do putStrLn "Game ended."
+                        return ()
+           Victory -> do putStrLn $ (show piece) ++ " Wins!"
+                         putStr $ showBoard newBoard
+                         return ()
+           Tie     -> do putStrLn $ "Game over - no more moves left"
+                         putStr $ showBoard newBoard
+                         return ()
+           Continue -> do putStrLn "test"
+                          putStr $ showBoard newBoard
+                          mainLoop newBoard newPiece
 
+
+evalInput :: Command -> Piece -> Board -> (State, Piece, Board)
+evalInput Exit piece board = (Abort, piece, board)
+evalInput InvalidInput piece board = (Repeat, piece, board)
+evalInput (Move square) piece board = 
+    let maybeBoard = move board square piece
+    in
+       case maybeBoard of
+           Nothing -> (Repeat, piece, board)
+           Just newBoard -> (gameState newBoard, if piece == X then O else X, newBoard)
 
 parseInput :: String -> Command
 parseInput "end" = Exit
