@@ -6,8 +6,7 @@ import qualified Data.Char as C
 type Square = (Int, Int)
 data Piece = X | O | NoPiece deriving (Eq, Show)
 data Board = Board Int (M.Map Square Piece) -- the Int is the size
-data GameState = Tie | Victory | Continue
-
+data GameState = Tie | Victory | Continue deriving (Eq, Show)
 data Command = Exit | Move Square | InvalidInput deriving (Eq, Show)
 
 showBoard :: Board -> String
