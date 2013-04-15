@@ -49,16 +49,14 @@ boardDiagonals (Board size m) =
 
 gameState board@(Board size m) =
     let findPiece = flip (M.findWithDefault NoPiece) m
-        rows      = map (map findPiece) $ boardRows board
-        columns   = map (map findPiece) $ boardColumns board
-        diagonals = map (map findPiece) $ boardDiagonals board
-        lines = rows ++ columns ++ diagonals
+        lineCoords = concatMap (\f -> f board) [boardRows, boardColumns, boardDiagonals]
+        lines = map (map findPiece) lineCoords
     in
       if any (\line -> (all (== X) line) || (all (== O) line)) lines
       then Victory
-      else if all (/= NoPiece) (concat rows)
-           then Tie
-           else Continue
+      else if any (== NoPiece) (concat lines)
+           then Continue
+           else Tie
 
 main = do
     putStrLn "Welcome to Tic-Tac-Monad!"
