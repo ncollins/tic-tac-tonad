@@ -22,17 +22,8 @@ showBoard (Board size m) = let lookup sq = M.findWithDefault " " sq (fmap show m
 squareTaken (Board size m) square = M.member square m
 
 move (Board size m) s p = if squareTaken (Board size m) s
-                               then Nothing
-                               else Just $ Board size (M.insert s p m)
-
-
--- i.e. it only checks if the most recent move has ended the game
-victory (Board size m) (row, column) piece =
-    let row_coords = map (\y -> (row, y)) [1..size]
-        col_coords = map (\x -> (x, column)) [1..size]
-        squareEq p s = (M.findWithDefault NoPiece s m) == p
-    in all (squareEq piece) row_coords || all (squareEq piece) col_coords
-
+                          then Nothing
+                          else Just $ Board size (M.insert s p m)
 
 boardRows (Board size m) =
     let range = [1..size]
