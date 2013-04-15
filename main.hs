@@ -48,17 +48,18 @@ boardDiagonals (Board size m) =
     in [zip range range, zip range (reverse range)]
 
 gameState board@(Board size m) =
-    let rows = map (\l -> map (\s -> M.findWithDefault NoPiece s m) l) (boardRows board)
-        columns = map (\l -> map (\s -> M.findWithDefault NoPiece s m) l) (boardColumns board)
-        diagonals = map (\l -> map (\s -> M.findWithDefault NoPiece s m) l) (boardDiagonals board)
+    let findPiece = flip (M.findWithDefault NoPiece) m
+        rows      = map (map findPiece) $ boardRows board
+        columns   = map (map findPiece) $ boardColumns board
+        diagonals = map (map findPiece) $ boardDiagonals board
         lines = rows ++ columns ++ diagonals
     in
-      if any (\line -> (all (\x -> x == X) line) || (all (\x -> x == O) line)) lines
+      if any (\line -> (all (== X) line) || (all (== O) line)) lines
       then Victory
-      else if all (\x -> x /= NoPiece) (concat rows)
+      else if all (/= NoPiece) (concat rows)
            then Tie
            else Continue
-          
+
 main = do
     putStrLn "Welcome to Tic-Tac-Monad!"
     let initialBoard = Board 3 (M.fromList [])
