@@ -4,13 +4,19 @@ import qualified Data.Map as M
 import qualified Data.Char as C
 
 type Square = (Int, Int)
-data Piece = X | O | NoPiece deriving (Eq, Show)
+data Piece = X | O | NoPiece deriving (Eq)
+
+instance Show Piece where
+  show X = "X"
+  show O = "O"
+  show _ = " "
+
 data Board = Board Int (M.Map Square Piece) -- the Int is the size
 data State = Tie | Victory | Continue | Abort | Repeat deriving (Eq, Show)
 data Command = Exit | Move Square | InvalidInput deriving (Eq, Show)
 
 showBoard :: Board -> String
-showBoard (Board size m) = let lookup sq = M.findWithDefault " " sq (fmap show m)
+showBoard (Board size m) = let lookup sq = show $ M.findWithDefault NoPiece sq m
                            in
                               "--------\n" ++
                               "  " ++ (unwords ["A", "B", "C"]) ++ "\n" ++
