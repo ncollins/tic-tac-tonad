@@ -33,12 +33,12 @@ move (Board size m) s p = if squareTaken (Board size m) s
 
 boardRows (Board size m) =
     let range = [1..size]
-    in map (\r -> map (\c -> (r,c)) range) range
+    in map (flip zip range . repeat) range
 
 
 boardColumns (Board size m) =
     let range = [1..size]
-    in map (\c -> map (\r -> (r,c)) range) range
+    in map (zip range . repeat) range
 
 boardDiagonals (Board size m) =
     let range = [1..size]
@@ -87,7 +87,7 @@ mainLoop board piece = do
 evalInput :: Command -> Piece -> Board -> (State, Piece, Board)
 evalInput Exit piece board = (Abort, piece, board)
 evalInput InvalidInput piece board = (Repeat, piece, board)
-evalInput (Move square) piece board = 
+evalInput (Move square) piece board =
     let maybeBoard = move board square piece
     in
        case maybeBoard of
