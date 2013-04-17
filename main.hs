@@ -4,13 +4,19 @@ import qualified Data.Map as M
 import qualified Data.Char as C
 
 type Square = (Int, Int)
-data Piece = X | O | NoPiece deriving (Eq, Show)
+data Piece = X | O | NoPiece deriving (Eq)
+
+instance Show Piece where
+  show X = "X"
+  show O = "O"
+  show _ = " "
+
 data Board = Board Int (M.Map Square Piece) -- the Int is the size
 data State = Tie | Victory | Continue | Abort | Repeat deriving (Eq, Show)
 data Command = Exit | Move Square | InvalidInput deriving (Eq, Show)
 
 showBoard :: Board -> String
-showBoard (Board size m) = let lookup sq = M.findWithDefault " " sq (fmap show m)
+showBoard (Board size m) = let lookup sq = show $ M.findWithDefault NoPiece sq m
                            in
                               "--------\n" ++
                               "  " ++ (unwords ["A", "B", "C"]) ++ "\n" ++
@@ -22,43 +28,33 @@ showBoard (Board size m) = let lookup sq = M.findWithDefault " " sq (fmap show m
 squareTaken (Board size m) square = M.member square m
 
 move (Board size m) s p = if squareTaken (Board size m) s
-                               then Nothing
-                               else Just $ Board size (M.insert s p m)
-
-
--- i.e. it only checks if the most recent move has ended the game
-victory (Board size m) (row, column) piece =
-    let row_coords = map (\y -> (row, y)) [1..size]
-        col_coords = map (\x -> (x, column)) [1..size]
-        squareEq p s = (M.findWithDefault NoPiece s m) == p
-    in all (squareEq piece) row_coords || all (squareEq piece) col_coords
-
+                          then Nothing
+                          else Just $ Board size (M.insert s p m)
 
 boardRows (Board size m) =
     let range = [1..size]
-    in map (\r -> map (\c -> (r,c)) range) range
+    in map (flip zip range . repeat) range
 
 
 boardColumns (Board size m) =
     let range = [1..size]
-    in map (\c -> map (\r -> (r,c)) range) range
+    in map (zip range . repeat) range
 
 boardDiagonals (Board size m) =
     let range = [1..size]
     in [zip range range, zip range (reverse range)]
 
 gameState board@(Board size m) =
-    let rows = map (\l -> map (\s -> M.findWithDefault NoPiece s m) l) (boardRows board)
-        columns = map (\l -> map (\s -> M.findWithDefault NoPiece s m) l) (boardColumns board)
-        diagonals = map (\l -> map (\s -> M.findWithDefault NoPiece s m) l) (boardDiagonals board)
-        lines = rows ++ columns ++ diagonals
+    let findPiece = flip (M.findWithDefault NoPiece) m
+        lineCoords = concatMap (\f -> f board) [boardRows, boardColumns, boardDiagonals]
+        lines = map (map findPiece) lineCoords
     in
-      if any (\line -> (all (\x -> x == X) line) || (all (\x -> x == O) line)) lines
+      if any (\line -> (all (== X) line) || (all (== O) line)) lines
       then Victory
-      else if all (\x -> x /= NoPiece) (concat rows)
-           then Tie
-           else Continue
-          
+      else if any (== NoPiece) (concat lines)
+           then Continue
+           else Tie
+
 main = do
     putStrLn "Welcome to Tic-Tac-Monad!"
     let initialBoard = Board 3 (M.fromList [])
@@ -91,7 +87,7 @@ mainLoop board piece = do
 evalInput :: Command -> Piece -> Board -> (State, Piece, Board)
 evalInput Exit piece board = (Abort, piece, board)
 evalInput InvalidInput piece board = (Repeat, piece, board)
-evalInput (Move square) piece board = 
+evalInput (Move square) piece board =
     let maybeBoard = move board square piece
     in
        case maybeBoard of
