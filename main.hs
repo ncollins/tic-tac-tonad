@@ -64,7 +64,6 @@ main = do
 mainLoop board piece = do
     putStrLn $ "enter your move " ++ show piece ++ ":"
     input <- fmap parseInput getLine
-    putStrLn $ show input
     let (state, newPiece, newBoard) = evalInput input piece board
     case state of
            Repeat   -> do putStrLn "invalid input, try again..."
@@ -73,8 +72,7 @@ mainLoop board piece = do
                           putStr $ show newBoard
            Tie      -> do putStrLn $ "Game over - no more moves left"
                           putStr $ show newBoard
-           Continue -> do putStrLn "test"
-                          putStr $ show newBoard
+           Continue -> do putStr $ show newBoard
                           mainLoop newBoard newPiece
            Abort    -> putStrLn "Game ended."
 
